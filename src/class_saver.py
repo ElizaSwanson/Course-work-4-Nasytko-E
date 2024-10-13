@@ -1,9 +1,10 @@
 import json
 import os.path
+from abc import ABC, abstractmethod
 from json import JSONDecodeError
+
 from config import DATA_DIR
 from src.class_vacancy import Vacancy
-from abc import ABC, abstractmethod
 
 
 class ABC_saver(ABC):
@@ -52,7 +53,7 @@ class JSON_saver(ABC_saver):
 
         vac_list = self.__read_file()
 
-        if vacancies.url not in[vac["url"] for vac in vac_list]:
+        if vacancies.url not in [vac["url"] for vac in vac_list]:
             vac_list.append(vacancies.vac_to_dict())
             self.__save_file(vac_list)
 
@@ -75,6 +76,3 @@ class JSON_saver(ABC_saver):
                 vac_found.append(vac)
 
         return Vacancy.vac_to_list(vac_found)
-
-
-

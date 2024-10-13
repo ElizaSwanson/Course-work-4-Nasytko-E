@@ -1,9 +1,10 @@
 import json
 import os
 
+from config import DATA_DIR
 from src.class_saver import JSON_saver
 from src.class_vacancy import Vacancy
-from config import DATA_DIR
+
 
 def test_json():
     filename = JSON_saver("test.json")
@@ -14,8 +15,12 @@ def test_json():
 
     with open(file, encoding="utf-8") as f:
         res = json.load(f)
-    assert res == [{'name': 'python',
- 'requirement': 'требования',
- 'responsibility': 'обязанности',
- 'salary': 0,
- 'url': 'https://hh.ru'}]
+    assert res == [
+        {
+            "name": "python",
+            "requirement": "требования",
+            "responsibility": "обязанности",
+            "salary": 0,
+            "url": "https://hh.ru",
+        }
+    ]

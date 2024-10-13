@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 import requests
 
 
@@ -10,13 +11,13 @@ class Parser(ABC):
 
 
 class HH(Parser):
-    """Класс для работы с API HeadHunter  """
+    """Класс для работы с API HeadHunter"""
 
     def __init__(self):
         """инициализация объектов класса"""
-        self.__url = 'https://api.hh.ru/vacancies'
-        self.__headers = {'User-Agent': 'HH-User-Agent'}
-        self.__params = {'text': '', 'page': 0, 'per_page': 100}
+        self.__url = "https://api.hh.ru/vacancies"
+        self.__headers = {"User-Agent": "HH-User-Agent"}
+        self.__params = {"text": "", "page": 0, "per_page": 100}
         self.__vacancies = []
 
     @property
@@ -26,19 +27,23 @@ class HH(Parser):
 
     def __connect_to_api(self):
         """запрашивает данные у ХХ"""
-        response = requests.get(self.__url, headers=self.__headers, params=self.__params)
+        response = requests.get(
+            self.__url, headers=self.__headers, params=self.__params
+        )
         if response.status_code == 200:
             return response
         print("Ошибка получения данных")
 
     def load_vacancy_info(self, keyword):
-        self.__params['text'] = keyword
-        while self.__params.get('page') != 20:
+        """ищет вакансии по ключевому слову"""
+
+        self.__params["text"] = keyword
+        while self.__params.get("page") != 20:
             response = self.__connect_to_api()
             if response:
-                vacancy = response.json()['items']
+                vacancy = response.json()["items"]
                 self.__vacancies.extend(vacancy)
-                self.__params['page'] += 1
+                self.__params["page"] += 1
             else:
                 break
 
