@@ -24,21 +24,21 @@ class HH(Parser):
         """возвращает ссылку"""
         return self.__url
 
-    def connect_to_api(self):
+    def __connect_to_api(self):
         """запрашивает данные у ХХ"""
         response = requests.get(self.__url, headers=self.__headers, params=self.__params)
         if response.status_code == 200:
             return response
         print("Ошибка получения данных")
 
-    def load_vacancies(self, keyword):
+    def load_vacancy_info(self, keyword):
         self.__params['text'] = keyword
         while self.__params.get('page') != 20:
             response = self.__connect_to_api()
             if response:
-                vacancies = response.json()['items']
-                self.vacancies.extend(vacancies)
-                self.params['page'] += 1
+                vacancy = response.json()['items']
+                self.__vacancies.extend(vacancy)
+                self.__params['page'] += 1
             else:
                 break
 
@@ -69,4 +69,3 @@ class HH(Parser):
                 vac_list.append(vacancy)
 
             return vac_list
-

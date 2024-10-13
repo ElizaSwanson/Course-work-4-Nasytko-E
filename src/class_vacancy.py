@@ -20,17 +20,16 @@ class Vacancy:
         self.salary = salary
 
     @classmethod
-    def vac_to_list(cls, vacancies_list) -> list:
+    def vac_to_list(cls, vacancies: list[dict]) -> list["Vacancy"]:
         """собирает данные и переделывает в список"""
 
-        return [cls(**vacancy) for vacancy in vacancies_list]
+        return [cls(**vac) for vac in vacancies]
 
     @staticmethod
     def __get_salary(salary: int | None) -> int | None:
         if salary:
             return salary
-        else:
-            return "Зарплата не указана"
+        return "Зарплата не указана"
 
     def __eq__(self, other):
         """сравнение - зарплаты равны"""
@@ -51,7 +50,7 @@ class Vacancy:
         """отображение ключевых моментов вакансии"""
 
         return (
-            f"Должность: {self.name}.\nСсылка на вакансию: {self.url}.\nЗарплата: {self.salary}."
+            f"Должность: {self.name}.\nСсылка на вакансию: {self.url}.\nЗарплата: {self.salary if self.salary else "не указана"}."
             f"\nТребования: {self.requirement}.\nОбязанности: {self.responsibility}"
         )
 

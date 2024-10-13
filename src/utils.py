@@ -1,7 +1,7 @@
 from src.class_vacancy import Vacancy
 
 
-def get_salary_range(vacancies: list[Vacancy], salary_from: int) -> list:
+def get_salary_range(vacancies: list[Vacancy], salary_from: int) -> list[Vacancy]:
     """возвращает вакансии в заданном диапазоне по зп"""
 
     return [vac for vac in vacancies if vac.salary >= salary_from]

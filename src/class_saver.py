@@ -9,15 +9,15 @@ from abc import ABC, abstractmethod
 class ABC_saver(ABC):
 
     @abstractmethod
-    def add_vac(self, vacancy: Vacancy):
+    def add_vac(self, vacancy: Vacancy) -> None:
         pass
 
     @abstractmethod
-    def vac_by_name(self, keyword: str):
+    def vac_by_name(self, keyword: str) -> list[Vacancy]:
         pass
 
     @abstractmethod
-    def delete_vac(self, url: str):
+    def delete_vac(self, url: str) -> None:
         pass
 
 
@@ -47,7 +47,7 @@ class JSON_saver(ABC_saver):
         with open(self.__filename, "w", encoding="utf-8") as file:
             json.dump(vacancy, file, ensure_ascii=False)
 
-    def add_vacancy(self, vacancies: Vacancy):
+    def add_vac(self, vacancies: Vacancy):
         """добавляет вакансию в файл"""
 
         vac_list = self.__read_file()
@@ -56,7 +56,7 @@ class JSON_saver(ABC_saver):
             vac_list.append(vacancies.vac_to_dict())
             self.__save_file(vac_list)
 
-    def delete_vacancy(self, url: str):
+    def delete_vac(self, url: str) -> None:
         """Удаляет вакансию из файла"""
 
         vac_list = self.__read_file()
@@ -66,7 +66,7 @@ class JSON_saver(ABC_saver):
 
         self.__save_to_file(vac_list)
 
-    def get_vacancy_by_vacancy_name(self, word: str) -> list[Vacancy]:
+    def vac_by_name(self, word: str) -> list[Vacancy]:
         """здесь хранится список вакансий с keyword"""
         vac_found = []
 
