@@ -34,7 +34,7 @@ class JSON_saver(ABC_saver):
 
         try:
             with open(self.__filename, encoding="utf-8") as file:
-                data_json = json.load(file)
+                data_json = json.loads(file)
         except FileNotFoundError:
             data_json = []
         except JSONDecodeError:
@@ -52,10 +52,10 @@ class JSON_saver(ABC_saver):
         """добавляет вакансию в файл"""
 
         vac_list = self.__read_file()
-
-        if vacancies.url not in [vac["url"] for vac in vac_list]:
-            vac_list.append(vacancies.vac_to_dict())
-            self.__save_file(vac_list)
+        for va in vacancies:
+            if va["url"] not in [vac["url"] for vac in vac_list]:
+                vac_list.append(va)
+                self.__save_file(vac_list)
 
     def delete_vac(self, url: str) -> None:
         """Удаляет вакансию из файла"""

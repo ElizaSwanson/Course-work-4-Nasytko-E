@@ -1,7 +1,7 @@
-from src.class_vacancy import Vacancy
 from src.class_hh_api import HH
-from src.utils import get_salary_range, get_top_vacancies, sort_vacancies_by_salary
 from src.class_saver import JSON_saver
+from src.class_vacancy import Vacancy
+from src.utils import get_salary_range, get_top_vacancies
 
 
 def user():
@@ -16,7 +16,9 @@ def user():
     save_vac.add_vac(load_vacs)
 
     if load_vacs:
-        print("Доступный список действий:\n 1. Показать вакансии.\n2. Поиск вакансии по уровню зарплаты.\n3. Поиск вакансии по ключевому слову.\n4. Показать топ вакансий по уровню зарплаты.\n5. Добавить вакансию.\n6. Удалить вакансию")
+        print(
+            "Доступный список действий:\n 1. Показать вакансии.\n2. Поиск вакансии по уровню зарплаты.\n3. Поиск вакансии по ключевому слову.\n4. Показать топ вакансий по уровню зарплаты.\n5. Добавить вакансию.\n6. Удалить вакансию"
+        )
 
         try:
             user_input = int(input("Введите цифру от 1 до 6: "))
@@ -26,11 +28,12 @@ def user():
         else:
             if user_input not in range(1, 7):
                 print("Введена неправильная цифра. Выбрано действие 1")
-                user_input= 1
+                user_input = 1
 
     if user_input == 1:
         for vac in Vacancy.vac_to_list(load_vacs):
             print(vac)
+        print("Спасибо, что воспользовались нашими услугами!")
 
     elif user_input == 2:
         try:
@@ -41,11 +44,13 @@ def user():
         search_by_salary = Vacancy.vac_to_list(load_vacs)
         for vac in get_salary_range(search_by_salary, search_salary):
             print(vac)
+        print("Спасибо, что воспользовались нашими услугами!")
 
     elif user_input == 3:
         search_key = input("Введите ключевое слово для поиска: ").lower()
         for vac in save_vac.vac_by_name(search_key):
             print(vac)
+        print("Спасибо, что воспользовались нашими услугами!")
 
     elif user_input == 4:
         try:
@@ -56,6 +61,7 @@ def user():
         search_res = Vacancy.vac_to_list(load_vacs)
         for vac in get_top_vacancies(search_res, search_top):
             print(vac)
+        print("Спасибо, что воспользовались нашими услугами!")
 
     elif user_input == 5:
         name_input = input("Введите название вакансии: ")
@@ -65,14 +71,14 @@ def user():
         sal_input = int(input("Введите зарплату: "))
         new_vacancy = Vacancy(name_input, url_input, req_input, res_input, sal_input)
         save_vac.add_vac(new_vacancy)
+        print("Спасибо, что воспользовались нашими услугами!")
 
     elif user_input == 6:
         del_url = input("Введите ссылку на вакансию: ")
         save_vac.delete_vac(del_url)
         print("Вакансия успешно удалена")
+        print("Спасибо, что воспользовались нашими услугами!")
 
-    else:
-        ("Спасибо, что воспользовались нашими услугами!")
 
 if __name__ == "__main__":
     user()
