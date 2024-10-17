@@ -34,7 +34,7 @@ class JSON_saver(ABC_saver):
 
         try:
             with open(self.__filename, encoding="utf-8") as file:
-                data_json = json.loads(file)
+                data_json = json.load(file)
         except FileNotFoundError:
             data_json = []
         except JSONDecodeError:
