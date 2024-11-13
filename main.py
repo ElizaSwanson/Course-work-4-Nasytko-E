@@ -4,6 +4,7 @@ from src.class_vacancy import Vacancy
 from src.utils import get_salary_range, get_top_vacancies
 
 
+
 def user():
     search = input("Приветствуем! Введите ключевое слово для поиска на ХХ.ру:")
 
