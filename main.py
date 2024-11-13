@@ -2,6 +2,8 @@ from src.class_hh_api import HH
 from src.class_saver import JSON_saver
 from src.class_vacancy import Vacancy
 from src.utils import get_salary_range, get_top_vacancies
+from src.class_DBManager_module import DBManager
+from src.class_create_module import DBConnection
 
 
 

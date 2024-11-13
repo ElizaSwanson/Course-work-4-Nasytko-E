@@ -6,7 +6,7 @@ import requests
 class Parser(ABC):
 
     @abstractmethod
-    def load_vacancy_info(self, keyword: str) -> list:
+    def __init__(self):
         pass
 
 
@@ -74,3 +74,64 @@ class HH(Parser):
                 vac_list.append(vacancy)
 
             return vac_list
+
+    def __get_vacancies_by_employer_id(self, employer_id: str):
+        """метод для получения информации по айди компании"""
+        try:
+            self.__params["employer_id"] = employer_id
+            while self.__params.get("page") != 10:
+                response = requests.get(
+                    self.__url, headers=self.__headers, params=self.__params
+                )
+                response_data = response.json()
+
+                if "items" in response_data:
+                    vacancies = response_data["items"]
+                    self.__vacancies.extend(vacancies)
+                else:
+                    print(f"Нет вакансий для работодателя с ID: {employer_id}")
+                    break
+
+                self.__params["page"] += 1
+        except Exception as e:
+            print(f"Произошла ошибка: {e}")
+
+    def get_vacancies_by_employer_id(self, employer_id: str):
+        self.__get_vacancies_by_employer_id(employer_id)
+        return self.__vacancies
+
+
+class Find_id_from_hh_api(Parser):
+    """Получение информации по работодателям"""
+
+    def __init__(self):
+        self.__url = "https://api.hh.ru/employers"
+        self.__headers = {"User-Agent": "HH-User-Agent"}
+        self.__params = {
+            "text": "",
+            "page": 0,
+            "per_page": 100,
+            "sort_by": "by_vacancies_open",
+        }
+        self.__employers = []
+
+    def __get_employer_info(self, keyword=""):
+        """метод для получения информации. ПРИВАТНЫЙ!"""
+        try:
+            self.__params["text"] = keyword
+            while self.__params.get("page") != 20:
+                response = requests.get(
+                    self.__url, headers=self.__headers, params=self.__params
+                )
+                employers = response.json()
+                self.__employers.extend(employers["items"])
+                self.__params["page"] += 1
+        except Exception as e:
+            print(f"Что-то не так с подключением, ошибка: {e}")
+
+    def get_employer_info(self, employers_count, keyword=""):
+        self.__get_employer_info(keyword)
+        for employer in self.__employers[:employers_count]:
+            print(f"{employer.get('name')}, id: {employer.get('id')}")
+        return self.__employers
+

@@ -8,7 +8,7 @@ load_dotenv()
 
 
 class DBConnection:
-    """Класс для подключения к базе данных PostgreSQL"""
+    """Класс для подключения к PostgreSQL"""
 
     def __init__(self):
         self._host = os.getenv("HOST")
@@ -19,12 +19,7 @@ class DBConnection:
 
     def connect_to_db(self, query, params=None):
         conn = psycopg2.connect(
-            host=self._host,
-            database=self._database,
-            user=self._username,
-            port=self._port,
-            password=self._password,
-        )
+            host="localhost", database="postgres", user="postgres", port="5432", password="4568093h")
         cur = conn.cursor()
         conn.autocommit = True
         cur.execute(query, params)
@@ -32,7 +27,7 @@ class DBConnection:
         conn.close()
 
     def create_db(self):
-        """Метод для создания базы данных"""
+        """созданиe базы данных"""
         self._database = "postgres"
         execute_message_drop = "DROP DATABASE IF EXISTS employers_vacancy;"
         execute_message_create = "CREATE DATABASE employers_vacancy;"
@@ -45,7 +40,7 @@ class DBConnection:
             vacancies_count int)"""
         return self.connect_to_db(execute_message)
 
-    def db_filling_columns_for_emps(self, employers_id_list: list, employers_list: list):
+    def db_employers(self, employers_id_list: list, employers_list: list):
         filtered_employers_list = [
             emp for emp in employers_list if emp["id"] in employers_id_list
         ]
@@ -61,7 +56,7 @@ class DBConnection:
         except Exception as e:
             print(f"Ошибка: {e}")
 
-    def db_creating_vacancies(self) -> None:
+    def db_vacancies(self) -> None:
         execute_message = """CREATE TABLE IF NOT EXISTS vacancies 
             (vacancy_id varchar NOT NULL,
             vacancy_name varchar NOT NULL,
@@ -73,7 +68,7 @@ class DBConnection:
             FOREIGN KEY (employer_id) REFERENCES employers (employer_id))"""
         return self.connect_to_db(execute_message)
 
-    def db_filling_vacancies(self, vacancies_list: list):
+    def db_adding_vacancies(self, vacancies_list: list):
         execute_message = """INSERT INTO vacancies 
                         (vacancy_id, vacancy_name, salary_from, salary_to, requirement, url, employer_id) 
                         VALUES (%s, %s, %s, %s, %s, %s, %s)"""
