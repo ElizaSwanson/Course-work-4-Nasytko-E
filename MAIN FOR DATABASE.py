@@ -13,8 +13,6 @@ def user():
     save_data_to_database(data_employer, data_vacancies, 'test_db', params)
     db_manager = DBManager(params)
     print("Привет! Я твой помощник для отслеживания вакансий выбранных тобой работодателей.")
-    id_input = input("Введи ID работодателя:")
-    Find_id_from_hh_api.employers = id_input
     print("Что тебе нужно сделать? Вот что я могу:")
     print("1. Показать список компаний и количество вакансий у каждой компании")
     print("2. Показать список всех вакансий со ссылками на вакансию")
