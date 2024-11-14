@@ -1,50 +1,78 @@
 import psycopg2
 
-from src.class_create_module import DBConnection
 
+class DBManager:
+    """класс для взаимодействия с базой данных"""
 
-class DBManager(DBConnection):
-    """Класс для взаимодействия с базой данных"""
-
-    def __init__(self):
-        super().__init__()
-
-    def connect_to_db(self, query, params=None):
-        conn = psycopg2.connect(
-            host="localhost", database="postgres", user="postgres", port="5432", password="4568093h")
-        cur = conn.cursor()
-        conn.autocommit = True
-        cur.execute(query, params)
-        result = cur.fetchall()
-        cur.close()
-        conn.close()
-        return result
+    def __init__(self, params):
+        self.conn = psycopg2.connect(dbname="test_db", **params)
+        self.cur = self.conn.cursor()
 
     def get_companies_and_vacancies_count(self):
-        """получает список всех компаний и количество вакансий у каждой компании"""
-        execute_message = """SELECT employers.company_name, COUNT(vacancies.employer_id)
-        FROM employers JOIN vacancies USING (employer_id) GROUP BY employer_id"""
-        return f'Компании и количество вакансий:\n{self.connect_to_db(execute_message)}'
+        """метод для получения всех компаний и вакансий у каждой из них"""
+        self.cur.execute(
+            """
+                    SELECT employer_name, COUNT(vacancies.employer_id)
+                    FROM employers
+                    INNER JOIN vacancies USING (employer_id)
+                    GROUP BY employer_name
+                    ORDER BY COUNT DESC
+            """
+        )
+
+        return self.cur.fetchall()
 
     def get_all_vacancies(self):
-        """получает список всех вакансий с указанием названия компании, названия вакансии и зарплаты и ссылки на вакансию"""
-        execute_message = """SELECT employers.company_name, vacancies.vacancy_name, 
-        ((vacancies.salary_from + vacancies.salary_to) / 2), vacancies.url
-        FROM vacancies JOIN employers USING(employer_id)"""
-        return f'Список всех вакансий:\n{self.connect_to_db(execute_message)[:10]} \n ...'
+        """метод для вывода вакансий с указанием названия работодателя, названия вакансии, зп и ссылки на вакансию"""
+        self.cur.execute(
+            """
+                    SELECT e.employer_name, v.vacancy_name, v.salary, v.vacancy_url
+                    FROM vacancies v
+                    INNER JOIN employers e USING (employer_id)
+                    WHERE v.salary IS NOT NULL AND v.salary != 0
+                    ORDER BY v.salary DESC
+
+            """
+        )
+
+        return self.cur.fetchall()
 
     def get_avg_salary(self):
-        """получает среднюю зарплату по вакансиям"""
-        execute_message = """SELECT AVG((vacancies.salary_from + vacancies.salary_to) / 2) FROM vacancies"""
-        return f'Средняя зарплата по вакансиям:\n{self.connect_to_db(execute_message)}'
+        """метод для подсчёта средней зп по всем вакансиям"""
+        self.cur.execute(
+            """
+                    SELECT AVG(salary)
+                    FROM vacancies
+            """
+        )
+
+        result = self.cur.fetchone()
+        avg_salary = float(round(result[0]))
+        formatted_avg_salary = format(avg_salary, ".2f")
+        return formatted_avg_salary
 
     def get_vacancies_with_higher_salary(self):
-        """получает список всех вакансий, у которых зарплата выше средней по всем вакансиям"""
-        execute_message = """SELECT * FROM vacancies WHERE ((vacancies.salary_from + vacancies.salary_to) / 2) > 
-(SELECT (AVG((vacancies.salary_from + vacancies.salary_to) / 2)) FROM vacancies)"""
-        return f'Вакансии с зарплатой выше среднего:\n{self.connect_to_db(execute_message)[:10]}'
+        """метод для поиска вакансий с зп выше, чем в методе со средней зп"""
+        avg_salary = self.get_avg_salary()[0][0]
 
-    def get_vacancies_with_keyword(self, keyword: str):
-        """получает список всех вакансий, в названии которых содержатся переданные в метод слова"""
-        execute_message = f"""SELECT * FROM vacancies WHERE vacancy_name ILIKE '%{keyword}%'"""
-        return f'Вакансии по ключевому слову:\n{self.connect_to_db(execute_message)[:10]}'
+        self.cur.execute(
+            """
+            SELECT v.vacancy_name, v.salary
+            FROM vacancies v
+            WHERE v.salary > %s
+            """,
+            (avg_salary,),
+        )
+        return self.cur.fetchall()
+
+    def get_vacancies_by_word(self, keyword):
+        """
+        Получает список всех вакансий, в названии которых содержатся переданные в метод слова, например python.
+        """
+
+        query = """
+        SELECT * FROM vacancies
+        WHERE LOWER(vacancy_name) LIKE %s
+        """
+        self.cur.execute(query, ("%" + keyword.lower() + "%",))
+        return self.cur.fetchall()

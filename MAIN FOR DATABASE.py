@@ -1,32 +1,57 @@
 from src.class_hh_api import HH, Find_id_from_hh_api
-from src.class_saver import JSON_saver
-from src.class_vacancy import Vacancy
-from src.utils import get_salary_range, get_top_vacancies
 from src.class_DBManager_module import DBManager
-from src.class_create_module import DBConnection
+from src.class_create_module import create_database, save_data_to_database
+from src.parametes import config
+import os
 
 
 def user():
-    employer_search = input("Введите ключевое слово для поиска:\n")
-    employers_count = int(input("Введите желаемое число вакансий на странице (до 50):\n"))
-    employer_obj = Find_id_from_hh_api()
-    employers = employer_obj.get_employer_info(employers_count, keyword=employer_search)
-    DBConnection().create_db()
-    db_connect = DBConnection()
-    db_connect.db_creating_employers()
-    employers_id_list = list(input("Введите через запятую id не менее 1 компании для отслеживания:\n").split(", "))
-    db_connect.db_employers(employers_id_list, employers)
-    db_connect.db_vacancies()
-    for emp_id in employers_id_list:
-        vacancy_list = HH().get_vacancies_by_employer_id(emp_id)
-        db_connect.db_adding_vacancies(vacancy_list)
-    searching_keyword = input('Введите слово для поиска по имеющимся вакансиям ...')
-    query_manager = DBManager()
-    print(query_manager.get_companies_and_vacancies_count())
-    print(query_manager.get_all_vacancies())
-    print(query_manager.get_avg_salary())
-    print(query_manager.get_vacancies_with_higher_salary())
-    print(query_manager.get_vacancies_with_keyword(searching_keyword))
+    params = config()
+    create_database('test_db', params)
+    data_employer = Find_id_from_hh_api().get_emp()
+    data_vacancies = Find_id_from_hh_api().load_vacancies()
+    save_data_to_database(data_employer, data_vacancies, 'test_db', params)
+    db_manager = DBManager(params)
+    print("Привет! Я твой помощник для отслеживания вакансий выбранных тобой работодателей.")
+    id_input = input("Введи ID работодателя:")
+    Find_id_from_hh_api.employers = id_input
+    print("Что тебе нужно сделать? Вот что я могу:")
+    print("1. Показать список компаний и количество вакансий у каждой компании")
+    print("2. Показать список всех вакансий со ссылками на вакансию")
+    print("3. Посчитать среднюю зарплату у вакансий")
+    print("4. Показать вакансии с зарплатой выше средней")
+    print("5. Отобрать вакансии по ключевому слову")
+    print("6. Завершить работу программы")
+    while True:
+        user_input = input()
+        if user_input == "1":
+            companies_and_vacancies_count = db_manager.get_companies_and_vacancies_count()
+            for i in companies_and_vacancies_count:
+                print(i)
+            print("Что-то еще?")
+        elif user_input == "2":
+            all_vacancies = db_manager.get_all_vacancies()
+            for i in all_vacancies:
+                print(i)
+            print("Что-то еще?")
+        elif user_input == "3":
+            avg_salary = db_manager.get_avg_salary()
+            print(avg_salary)
+            print("Что-то еще?")
+        elif user_input == "4":
+            vacancies_with_higher_salary = db_manager.get_vacancies_with_higher_salary()
+            for i in vacancies_with_higher_salary:
+                print(i)
+            print("Что-то еще?")
+        elif user_input == "5":
+            user_word = input("Введите слово для поиска\n").lower()
+            vacancies_with_keyword = db_manager.get_vacancies_by_word(user_word)
+            for i in vacancies_with_keyword:
+                print(i)
+            print("Что-то еще?")
+        elif user_input == "6":
+            print("Пока!")
+            break
 
 
 if __name__ == "__main__":
