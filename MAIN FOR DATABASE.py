@@ -2,7 +2,6 @@ from src.class_hh_api import HH, Find_id_from_hh_api
 from src.class_DBManager_module import DBManager
 from src.class_create_module import create_database, save_data_to_database
 from src.parametes import config
-import os
 
 
 def user():
