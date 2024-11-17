@@ -18,7 +18,7 @@ class HH(Parser):
         self.__url = "https://api.hh.ru/vacancies"
         self.__headers = {"User-Agent": "HH-User-Agent"}
         self.__params = {"text": "", "page": 0, "per_page": 100}
-        self.__vacancies = []
+        self.__vacancies = [1552753, 2180, 78638, 17862, 596246, 954660, 4787018, 9498112, 9739145, 1495025]
 
     @property
     def url(self) -> str:

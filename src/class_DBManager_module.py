@@ -59,7 +59,7 @@ class DBManager:
             """
             SELECT v.vacancy_name, v.salary
             FROM vacancies v
-            WHERE v.salary > %s
+            WHERE v.salary > AVG(v.salary)
             """,
             (avg_salary,),
         )
