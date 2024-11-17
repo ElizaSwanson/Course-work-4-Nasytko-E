@@ -1,106 +1,101 @@
-import os
+from typing import Any
 
 import psycopg2
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 
-class DBConnection:
-    """Класс для подключения к базе данных PostgreSQL"""
+def create_database(database_name: str, params):
+    """функция для создания БД"""
 
-    def __init__(self):
-        self._host = os.getenv("HOST")
-        self._database = os.getenv("DATABASE")
-        self._username = os.getenv("USERNAME")
-        self._port = os.getenv("PORT")
-        self._password = os.getenv("PASSWORD")
+    conn = psycopg2.connect(dbname="postgres", **params)
+    conn.autocommit = True
+    cur = conn.cursor()
 
-    def connect_to_db(self, query, params=None):
-        conn = psycopg2.connect(
-            host=self._host,
-            database=self._database,
-            user=self._username,
-            port=self._port,
-            password=self._password,
+    cur.execute(f"DROP DATABASE IF EXISTS {database_name}")
+    cur.execute(f"CREATE DATABASE {database_name}")
+
+    conn.close()
+
+    conn = psycopg2.connect(dbname=database_name, **params)
+
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            CREATE TABLE employers (
+                employer_id INTEGER PRIMARY KEY,
+                employer_name text not null,
+                employer_area TEXT not null,
+                url TEXT,
+                open_vacancies INTEGER
+            )
+        """
         )
-        cur = conn.cursor()
-        conn.autocommit = True
-        cur.execute(query, params)
-        cur.close()
-        conn.close()
 
-    def create_db(self):
-        """Метод для создания базы данных"""
-        self._database = "postgres"
-        execute_message_drop = "DROP DATABASE IF EXISTS employers_vacancy;"
-        execute_message_create = "CREATE DATABASE employers_vacancy;"
-        return self.connect_to_db(execute_message_drop), self.connect_to_db(execute_message_create)
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            CREATE TABLE vacancies (
+                vacancy_id INTEGER,
+                vacancy_name VARCHAR,
+                vacancy_area VARCHAR,
+                salary INTEGER,
+                employer_id INTEGER REFERENCES employers(employer_id),
+                vacancy_url VARCHAR
+            )
+        """
+        )
 
-    def db_creating_employers(self) -> None:
-        execute_message = """CREATE TABLE IF NOT EXISTS employers 
-            (employer_id varchar PRIMARY KEY,
-            company_name varchar(50) UNIQUE,
-            vacancies_count int)"""
-        return self.connect_to_db(execute_message)
+    conn.commit()
+    conn.close()
 
-    def db_filling_columns_for_emps(self, employers_id_list: list, employers_list: list):
-        filtered_employers_list = [
-            emp for emp in employers_list if emp["id"] in employers_id_list
-        ]
-        try:
-            execute_message = """INSERT INTO employers (employer_id, company_name, vacancies_count) VALUES (%s, %s, %s)"""
-            for employer in filtered_employers_list:
-                params = (
-                    employer.get("id"),
-                    employer.get("name"),
-                    employer.get("open_vacancies"),
-                )
-                self.connect_to_db(execute_message, params)
-        except Exception as e:
-            print(f"Ошибка: {e}")
 
-    def db_creating_vacancies(self) -> None:
-        execute_message = """CREATE TABLE IF NOT EXISTS vacancies 
-            (vacancy_id varchar NOT NULL,
-            vacancy_name varchar NOT NULL,
-            salary_from int,
-            salary_to int,
-            requirement text,
-            url varchar NOT NULL,
-            employer_id varchar,
-            FOREIGN KEY (employer_id) REFERENCES employers (employer_id))"""
-        return self.connect_to_db(execute_message)
+def save_data_to_database(
+    data_employer: list[dict[str, Any]],
+    data_vacancies: list[dict[str, Any]],
+    database_name: str,
+    params: dict,
+):
+    """функция для сохранения информаций по вакансиям и работодателям"""
 
-    def db_filling_vacancies(self, vacancies_list: list):
-        execute_message = """INSERT INTO vacancies 
-                        (vacancy_id, vacancy_name, salary_from, salary_to, requirement, url, employer_id) 
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-        for vacancy in vacancies_list:
-            params = (
-                vacancy.get("id"),
-                vacancy.get("name"),
+    conn = psycopg2.connect(database=database_name, **params)
+
+    with conn.cursor() as cur:
+        for employer in data_employer:
+            cur.execute(
+                """
+                INSERT INTO employers (employer_id, employer_name, employer_area, url, open_vacancies)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
                 (
-                    vacancy.get("salary").get("from")
-                    if vacancy.get("salary") is not None
-                    else 0
-                ),
-                (
-                    vacancy.get("salary").get("to")
-                    if vacancy.get("salary") is not None
-                    else 0
-                ),
-                (
-                    vacancy.get("snippet").get("requirement")
-                    if vacancy.get("snippet") is not None
-                    else 0
-                ),
-                vacancy.get("url"),
-                (
-                    vacancy.get("employer").get("id")
-                    if vacancy.get("employer") is not None
-                    else 0
+                    employer["id"],
+                    employer["name"],
+                    employer["area"]["name"],
+                    employer["alternate_url"],
+                    employer["open_vacancies"],
                 ),
             )
-            self.connect_to_db(execute_message, params)
+        for vacancy in data_vacancies:
+            salary_from = (
+                vacancy["salary"]["from"]
+                if vacancy["salary"] and vacancy["salary"]["from"] is not None
+                else 0
+            )
+            cur.execute(
+                """
+                                INSERT INTO vacancies (vacancy_id, vacancy_name, vacancy_area, salary, employer_id, vacancy_url)
+                                VALUES (%s, %s, %s, %s, %s, %s)
+                                """,
+                (
+                    vacancy.get("id"),
+                    vacancy["name"],
+                    vacancy["area"]["name"],
+                    salary_from,
+                    vacancy["employer"]["id"],
+                    vacancy["alternate_url"],
+                ),
+            )
+
+    conn.commit()
+    conn.close()
